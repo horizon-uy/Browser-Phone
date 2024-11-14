@@ -1336,7 +1336,7 @@ input[type=range]{
 
 .StageContainer{
     width: 100%;
-    height: calc(100% - 80px); /* 80 is the height of the preview area */
+    height: 100%; /* 80 is the height of the preview area */
     z-index: 80; /* Video Levels are 80-90 */
     position: relative;
 }
@@ -1439,6 +1439,7 @@ input[type=range]{
     bottom: 0px;
     width: 100%;
     left: 0px;
+    display:none;
 }
 .CallControl{
     display: inline-block;
@@ -1952,3 +1953,17 @@ input[type=range]{
     top: 20px;
 }
 
+.container {
+    margin: 0;
+    padding: 0;
+    background-color: #282828; /* Updated background color */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+.logo {
+    width: 200px; /* Adjust the size as needed */
+    height: auto;
+}

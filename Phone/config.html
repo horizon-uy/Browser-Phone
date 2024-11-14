@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Configuration Page</title>
+    <!-- Include jQuery from a CDN -->
+    <script type="text/javascript" src="https://dtd6jl0d42sve.cloudfront.net/lib/jquery/jquery-3.6.1.min.js"></script>
+    <script type="text/javascript" src="https://dtd6jl0d42sve.cloudfront.net/lib/jquery/jquery-ui-1.13.2.min.js"></script>
+    <script type="text/javascript" src="https://dtd6jl0d42sve.cloudfront.net/lib/Moment/moment-with-locales-2.24.0.min.js"></script>
+    
+    <!-- Include phone.js -->
+    <script src="phone.js"></script>
+    <!-- Custom CSS Styles -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555555;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus {
+            border-color: #66afe9;
+            outline: none;
+        }
+        
+        .button-group {
+            text-align: center;
+        }
+        
+        .button-group input[type="submit"],
+        .button-group input[type="button"] {
+            background-color: #007BFF;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .button-group input[type="submit"]:hover,
+        .button-group input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        .button-group input[type="button"] {
+            background-color: #6c757d;
+        }
+
+        .button-group input[type="button"]:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Configuration Settings</h1>
+        <form id="configForm">
+            <label for="websocketPort">WebSocket Port:</label>
+            <input type="number" id="websocketPort" name="websocketPort" required>
+
+            <label for="VoicemailDid">Voicemail DID:</label>
+            <input type="text" id="VoicemailDid" name="VoicemailDid" required>
+
+            <label for="wssServer">WSS Server:</label>
+            <input type="text" id="wssServer" name="wssServer" required>
+
+            <label for="SipDomain">SIP Domain:</label>
+            <input type="text" id="SipDomain" name="SipDomain" required>
+
+            <label for="ServerPath">Server Path:</label>
+            <input type="text" id="ServerPath" name="ServerPath" required>
+
+            <label for="profileName">Profile Name:</label>
+            <input type="text" id="profileName" name="profileName" required>
+
+            <label for="SipUsername">SIP Username:</label>
+            <input type="text" id="SipUsername" name="SipUsername" required>
+
+            <label for="SipPassword">SIP Password:</label>
+            <input type="password" id="SipPassword" name="SipPassword" required>
+            
+            <label for="SelectedNumber">Extension number</label>
+            <input type="text" id="SelectedNumber" name="SelectedNumber" required>
+
+            <div class="button-group">
+                <input type="submit" value="Save Configuration">
+                <input type="button" value="Cancel" id="cancelButton">
+            </div>
+        </form>
+    </div>
+</body>
+</html>

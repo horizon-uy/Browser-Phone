@@ -15,7 +15,7 @@
 
 // Global Settings
 // ===============
-const appversion = "0.3.29";
+const appversion = "0.3.27";
 const sipjsversion = "0.20.0";
 const navUserAgent = window.navigator.userAgent;  // TODO: change to Navigator.userAgentData
 const instanceID = String(Date.now());
@@ -125,7 +125,7 @@ let RecordAllCalls = (getDbItem("RecordAllCalls", "0") == "1");             // S
 let StartVideoFullScreen = (getDbItem("StartVideoFullScreen", "1") == "1"); // Starts a video call in the full screen (browser screen, not desktop)
 let SelectRingingLine = (getDbItem("SelectRingingLine", "1") == "1");       // Selects the ringing line if you are not on another call ()
 
-let UiMaxWidth = parseInt(getDbItem("UiMaxWidth", 1240));                                   // Sets the max-width for the UI elements (don't set this less than 920. Set to very high number for full screen eg: 999999)
+let UiMaxWidth = parseInt(getDbItem("UiMaxWidth", 999999));                                   // Sets the max-width for the UI elements (don't set this less than 920. Set to very high number for full screen eg: 999999)
 let UiThemeStyle = getDbItem("UiThemeStyle", "system");                                     // Sets the color theme for the UI dark | light | system (set by your systems dark/light settings)
 let UiMessageLayout = getDbItem("UiMessageLayout", "middle");                               // Put the message Stream at the top or middle can be either: top | middle 
 let UiCustomConfigMenu = (getDbItem("UiCustomConfigMenu", "0") == "1");                     // If set to true, will only call web_hook_on_config_menu
@@ -143,13 +143,13 @@ let MirrorVideo = getDbItem("VideoOrientation", "rotateY(180deg)");      // Disp
 let maxFrameRate = getDbItem("FrameRate", "");                           // Suggests a frame rate to your webcam if possible.
 let videoHeight = getDbItem("VideoHeight", "");                          // Suggests a video height (and therefor picture quality) to your webcam.
 let MaxVideoBandwidth = parseInt(getDbItem("MaxVideoBandwidth", "2048")); // Specifies the maximum bandwidth (in Kb/s) for your outgoing video stream. e.g: 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | -1 to disable
-let videoAspectRatio = getDbItem("AspectRatio", "1.33");                  // Suggests an aspect ratio (1:1 = 1 | 4:3 = 0.75 | 16:9 = 0.5625) to your webcam.
+let videoAspectRatio = getDbItem("AspectRatio", "1");                  // ("1.33") Suggests an aspect ratio (1:1 = 1 | 4:3 = 0.75 | 16:9 = 0.5625) to your webcam.
 let NotificationsActive = (getDbItem("Notifications", "0") == "1");
 
 let StreamBuffer = parseInt(getDbItem("StreamBuffer", 50));                 // The amount of rows to buffer in the Buddy Stream
 let MaxDataStoreDays = parseInt(getDbItem("MaxDataStoreDays", 0));          // Defines the maximum amount of days worth of data (calls, recordings, messages, etc) to store locally. 0=Stores all data always. >0 Trims n days back worth of data at various events where. 
 let PosterJpegQuality = parseFloat(getDbItem("PosterJpegQuality", 0.6));    // The image quality of the Video Poster images
-let VideoResampleSize = getDbItem("VideoResampleSize", "HD");               // The resample size (height) to re-render video that gets presented (sent). (SD = ???x360 | HD = ???x720 | FHD = ???x1080)
+let VideoResampleSize = getDbItem("VideoResampleSize", "FHD");               // The resample size (height) to re-render video that gets presented (sent). (SD = ???x360 | HD = ???x720 | FHD = ???x1080)
 let RecordingVideoSize = getDbItem("RecordingVideoSize", "HD");             // The size/quality of the video track in the recordings (SD = 640x360 | HD = 1280x720 | FHD = 1920x1080)
 let RecordingVideoFps = parseInt(getDbItem("RecordingVideoFps", 12));       // The Frame Per Second of the Video Track recording
 let RecordingLayout = getDbItem("RecordingLayout", "them-pnp");             // The Layout of the Recording Video Track (side-by-side | them-pnp | us-only | them-only)
@@ -251,6 +251,8 @@ let settingsVideoStreamTrack = null;
 
 let CallRecordingsIndexDb = null;
 let CallQosDataIndexDb = null;
+
+let onCall = 0;
 
 // Utilities
 // =========
@@ -428,6 +430,27 @@ $(window).on("keypress", function(event) {
     // TODO: Add Shortcuts
 
     // console.log(event);
+    if(event.which == 13) {
+        event.preventDefault();
+        // let onCall = localDB.getItem("onCall");
+        if(!onCall || onCall == 0) {
+            console.log("Starting Video Call...");
+            const numberToCall = localDB.getItem('SelectedNumber');
+            const buddy = FindBuddyByExtNo(numberToCall);
+            DialByLine('video', buddy.identity, buddy.ExtNo);
+            onCall = 1;
+            // localDB.setItem("onCall", 1);
+        } else {
+            console.log("Ending current call...");
+            const numberToEndCall = localDB.getItem('SelectedNumber');
+            const line = FindLineByDisplayNumber(numberToEndCall.toString());
+            console.log(line);
+            endSession(line.LineNumber);
+            // localDB.setItem("onCall", 0);
+            onCall = 0;
+        }
+    }
+
     if(event.ctrlKey){
         // You have the Ctrl Key pressed, this could be a Call Function
         // Blind Transfer the current Call
@@ -443,12 +466,15 @@ $(window).on("keypress", function(event) {
         // Audio Call current selected buddy
         if(event.key == "c"){
             event.preventDefault();
-            console.log("Keyboard Shortcut for: Start Audio Call");
+            ShowMyProfile();
         }
         // Video Call current selected buddy
         if(event.key == "v"){
             event.preventDefault();
             console.log("Keyboard Shortcut for: Start Video Call");
+            // const numberToCall = localDB.getItem('SelectedNumber');
+            // const buddy = FindBuddyByExtNo(numberToCall);
+            // DialByLine('video', buddy.identity, buddy.ExtNo);
         }
         // Hold (Toggle)
         if(event.key == "h"){
@@ -464,6 +490,10 @@ $(window).on("keypress", function(event) {
         if(event.key == "e"){
             event.preventDefault();
             console.log("Keyboard Shortcut for: End current call");
+            // const numberToEndCall = localDB.getItem('SelectedNumber');
+            // const line = FindLineByDisplayNumber(numberToEndCall.toString());
+            // console.log(line);
+            // endSession(line.LineNumber);
         }
         // Recording (Start/Stop)
         if(event.key == "r"){
@@ -478,6 +508,125 @@ $(window).on("keypress", function(event) {
     }
 });
 $(document).ready(function () {
+
+    // Function to preload form fields with values from localStorage
+    function preloadForm() {
+        // WebSocket Port
+        if (localDB.getItem('websocketPort')) {
+            $('#websocketPort').val(localDB.getItem('websocketPort'));
+        } else {
+            $('#websocketPort').val('8089'); // Default value
+        }
+
+        // Voicemail DID
+        if (localDB.getItem('VoicemailDid')) {
+            $('#VoicemailDid').val(localDB.getItem('VoicemailDid'));
+        } else {
+            $('#VoicemailDid').val('7000'); // Default value
+        }
+
+        // WSS Server
+        if (localDB.getItem('wssServer')) {
+            $('#wssServer').val(localDB.getItem('wssServer'));
+        } else {
+            $('#wssServer').val('pbx-prod.horizonseguridad.com'); // Default value
+        }
+
+        // SIP Domain
+        if (localDB.getItem('SipDomain')) {
+            $('#SipDomain').val(localDB.getItem('SipDomain'));
+        } else {
+            $('#SipDomain').val('pbx-prod.horizonseguridad.com'); // Default value
+        }
+
+        // Server Path
+        if (localDB.getItem('ServerPath')) {
+            $('#ServerPath').val(localDB.getItem('ServerPath'));
+        } else {
+            $('#ServerPath').val('/ws'); // Default value
+        }
+
+        // Profile Name
+        if (localDB.getItem('profileName')) {
+            $('#profileName').val(localDB.getItem('profileName'));
+        } else {
+            $('#profileName').val('Juan Pablo Calvo'); // Default value
+        }
+
+        // SIP Username
+        if (localDB.getItem('SipUsername')) {
+            $('#SipUsername').val(localDB.getItem('SipUsername'));
+        } else {
+            $('#SipUsername').val('7000'); // Default value
+        }
+
+        // SIP Password
+        if (localDB.getItem('SipPassword')) {
+            $('#SipPassword').val(localDB.getItem('SipPassword'));
+        } else {
+            $('#SipPassword').val('checo.123'); // Default value
+        }
+
+        // Internal number to call
+        if (localDB.getItem('SelectedNumber')) {
+            $('#SelectedNumber').val(localDB.getItem('SelectedNumber'));
+        } else {
+            $('#SelectedNumber').val('4444'); // Default value
+        }
+    }
+
+    // Call the preload function
+    preloadForm();
+
+    // Handle form submission
+    $('#configForm').submit(function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Retrieve form values
+        var websocketPort = $('#websocketPort').val();
+        var VoicemailDid = $('#VoicemailDid').val();
+        var wssServer = $('#wssServer').val();
+        var SipDomain = $('#SipDomain').val();
+        var ServerPath = $('#ServerPath').val();
+        var profileName = $('#profileName').val();
+        var SipUsername = $('#SipUsername').val();
+        var SipPassword = $('#SipPassword').val();
+        var SelectedNumber = $('#SelectedNumber').val();
+
+        // Store values in localStorage
+        localDB.setItem('websocketPort', websocketPort);
+        localDB.setItem('VoicemailDid', VoicemailDid);
+        localDB.setItem('wssServer', wssServer);
+        localDB.setItem('SipDomain', SipDomain);
+        localDB.setItem('ServerPath', ServerPath);
+        localDB.setItem('profileName', profileName);
+        localDB.setItem('SipUsername', SipUsername);
+        localDB.setItem('SipPassword', SipPassword);
+        localDB.setItem('SelectedNumber', SelectedNumber);
+
+        // get profileUserId from local storage
+        const profileId = localDB.getItem('profileUserID');
+        // override buddies with the new selectedNumber
+        let buddies = JSON.parse(localDB.getItem(`${profileId}-Buddies`));
+
+        if(buddies && buddies.TotalRows) {
+            // There is already something in the localstorage
+            buddies.DataCollection[0].ExtensionNumber = SelectedNumber;
+            buddies.DataCollection[0].DisplayName = SelectedNumber;
+            localDB.setItem(`${profileId}-Buddies`, JSON.stringify(buddies));
+        } else {
+            MakeBuddy("extension", false, false, false, SelectedNumber, SelectedNumber, "", false, "", false, false);
+        }
+
+        // Redirect to index.html
+        window.location.href = 'index.html';
+    });
+
+     // Handle Cancel button click
+     $('#cancelButton').click(function() {
+        // Redirect to index.html without saving
+        window.location.href = 'index.html';
+    });
 
     // We will use the IndexDB, so connect to it now, and perform any upgrade options
     PrepareIndexDB();
@@ -807,7 +956,7 @@ function UpdateUI(){
             $("#rightContent").hide();
 
             $("#leftContent").css("width", "100%");
-            $("#leftContent").show();
+            $("#leftContent").hide();
         }
         else {
             // Nobody Selected (SHow Only Buddy / Line)
@@ -822,15 +971,15 @@ function UpdateUI(){
     else {
         // Wide Screen Layout
         if(selectedBuddy == null & selectedLine == null) {
-            $("#leftContent").css("width", "100%");
+            // $("#leftContent").css("width", "100%");
             $("#rightContent").css("margin-left", "0px");
-            $("#leftContent").show();
-            $("#rightContent").hide();
+            $("#leftContent").hide();
+            $("#rightContent").show();
         }
         else{
-            $("#leftContent").css("width", "320px");
-            $("#rightContent").css("margin-left", "320px");
-            $("#leftContent").show();
+            // $("#leftContent").css("width", "320px");
+            // $("#rightContent").css("margin-left", "320px");
+            $("#leftContent").hide();
             $("#rightContent").show();
 
             if(selectedBuddy != null) updateScroll(selectedBuddy.identity);
@@ -1618,9 +1767,29 @@ function InitUi(){
     var rightSection = $("<div/>");
     rightSection.attr("id", "rightContent");
     rightSection.attr("class", "rightContent");
+    // rightSection.attr("style", "height: 100%");
     rightSection.attr("style", "margin-left: 320px; height: 100%");
 
-    phone.append(leftSection);
+    const $videoPlayer = $('<video>', {
+        src: './media/output.mp4',
+        css: {
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            // zIndex: '9999' // Ensures the video is on top of other elements
+        },
+        controls: false, // Optional: adds controls to the video player
+        autoplay: true, // Optional: starts playing automatically
+        loop: true // Enables looping of the video
+    });
+
+    $($videoPlayer).prop('muted', 'muted');
+
+    rightSection.append($videoPlayer)
+
+    // phone.append(leftSection);
     phone.append(rightSection);
 
     if(DisableFreeDial == true) {
@@ -3413,10 +3582,10 @@ function onTrackAddedEvent(lineObj, includeVideo){
                 wrapper.css("heigh", "1px");
                 wrapper.hide();
 
-                var callerID = $("<div />", {
-                    class: "callerID"
-                });
-                wrapper.append(callerID);
+                // var callerID = $("<div />", {
+                //     class: "callerID"
+                // });
+                // wrapper.append(callerID);
 
                 var Actions = $("<div />", {
                     class: "Actions"
@@ -8985,38 +9154,44 @@ function FindLineByNumber(lineNum) {
     }
     return null;
 }
+function FindLineByDisplayNumber(lineNum) {
+    for(var l = 0; l < Lines.length; l++) {
+        if(Lines[l].DisplayNumber == lineNum) return Lines[l];
+    }
+    return null;
+}
 function AddLineHtml(lineObj, direction){
     var avatar = getPicture(lineObj.BuddyObj.identity);
 
     var html = "<table id=\"line-ui-"+ lineObj.LineNumber +"\" class=stream cellspacing=0 cellpadding=0>";
-    html += "<tr><td class=\"streamSection highlightSection\" style=\"height: 85px;\">";
+    html += "<tr><td class=\"streamSection highlightSection\" style=\"height: 0px;\">";
 
     // Close|Return|Back Button
-    html += "<div style=\"float:left; margin:0px; padding:5px; height:38px; line-height:38px\">"
-    html += "<button id=\"line-"+ lineObj.LineNumber +"-btn-back\" onclick=\"CloseLine('"+ lineObj.LineNumber +"')\" class=roundButtons title=\""+ lang.back +"\"><i class=\"fa fa-chevron-left\"></i></button> ";
-    html += "</div>"
+    // html += "<div style=\"float:left; margin:0px; padding:0px; height:0px; line-height:0px\">"
+    // html += "<button id=\"line-"+ lineObj.LineNumber +"-btn-back\" onclick=\"CloseLine('"+ lineObj.LineNumber +"')\" class=roundButtons title=\""+ lang.back +"\"><i class=\"fa fa-chevron-left\"></i></button> ";
+    // html += "</div>"
 
     // Profile UI
-    html += "<div class=contact style=\"cursor: unset; float: left;\">";
-    html += "<div id=\"line-ui-"+ lineObj.LineNumber +"-LineIcon\" class=lineIcon>"+ lineObj.LineNumber +"</div>";
-    html += "<div id=\"line-ui-"+ lineObj.LineNumber +"-DisplayLineNo\" class=contactNameText><i class=\"fa fa-phone\"></i> "+ lang.line +" "+ lineObj.LineNumber +"</div>";
-    html += "<div class=presenceText style=\"max-width:150px\">"+ lineObj.DisplayNumber +"</div>";
-    html += "</div>";
+    // html += "<div class=contact style=\"cursor: unset; float: left;\">";
+    // html += "<div id=\"line-ui-"+ lineObj.LineNumber +"-LineIcon\" class=lineIcon>"+ lineObj.LineNumber +"</div>";
+    // html += "<div id=\"line-ui-"+ lineObj.LineNumber +"-DisplayLineNo\" class=contactNameText><i class=\"fa fa-phone\"></i> "+ lang.line +" "+ lineObj.LineNumber +"</div>";
+    // html += "<div class=presenceText style=\"max-width:150px\">"+ lineObj.DisplayNumber +"</div>";
+    // html += "</div>";
 
     // Audio Activity
-    html += "<div style=\"float:right; line-height: 46px;\">";
-    html += "<div  id=\"line-"+ lineObj.LineNumber +"-monitoring\" style=\"margin-right:10px\">";
-    html += "<span style=\"vertical-align: middle\"><i class=\"fa fa-microphone\"></i></span> ";
-    html += "<span class=meterContainer title=\""+ lang.microphone_levels +"\">";
-    html += "<span id=\"line-"+ lineObj.LineNumber +"-Mic\" class=meterLevel style=\"height:0%\"></span>";
-    html += "</span> ";
-    html += "<span style=\"vertical-align: middle\"><i class=\"fa fa-volume-up\"></i></span> ";
-    html += "<span class=meterContainer title=\""+ lang.speaker_levels +"\">";
-    html += "<span id=\"line-"+ lineObj.LineNumber +"-Speaker\" class=meterLevel style=\"height:0%\"></span>";
-    html += "</span> ";
-    html += "</div>";
+    // html += "<div style=\"float:right; line-height: 46px;\">";
+    // html += "<div  id=\"line-"+ lineObj.LineNumber +"-monitoring\" style=\"margin-right:10px\">";
+    // html += "<span style=\"vertical-align: middle\"><i class=\"fa fa-microphone\"></i></span> ";
+    // html += "<span class=meterContainer title=\""+ lang.microphone_levels +"\">";
+    // html += "<span id=\"line-"+ lineObj.LineNumber +"-Mic\" class=meterLevel style=\"height:0%\"></span>";
+    // html += "</span> ";
+    // html += "<span style=\"vertical-align: middle\"><i class=\"fa fa-volume-up\"></i></span> ";
+    // html += "<span class=meterContainer title=\""+ lang.speaker_levels +"\">";
+    // html += "<span id=\"line-"+ lineObj.LineNumber +"-Speaker\" class=meterLevel style=\"height:0%\"></span>";
+    // html += "</span> ";
+    // html += "</div>";
     
-    html += "</div>";
+    // html += "</div>";
 
     // Separator --------------------------------------------------------------------------
     html += "<div style=\"clear:both; height:0px\"></div>"
@@ -9060,17 +9235,25 @@ function AddLineHtml(lineObj, direction){
 
     // Dialing Out Progress
     html += "<div id=\"line-"+ lineObj.LineNumber +"-progress\" style=\"display:none\">";
-    html += "<div class=\"CallPictureUnderlay\" style=\"background-image: url('"+ avatar +"')\"></div>";
-    html += "<div class=\"CallColorUnderlay\"></div>";
-    html += "<div class=\"CallUi\">";
-    html += "<div class=callingDisplayName>"+ lineObj.DisplayName +"</div>";
-    html += "<div class=callingDisplayNumber>"+ lineObj.DisplayNumber +"</div>";
-    html += "<div id=\"line-"+ lineObj.LineNumber +"-out-avatar\" class=\"inCallAvatar\" style=\"background-image: url('"+ avatar +"')\"></div>";
-    html += "<div class=progressCall>"
-    html += "<button onclick=\"cancelSession('"+ lineObj.LineNumber +"')\" class=rejectButton><i class=\"fa fa-phone\" style=\"transform: rotate(135deg);\"></i> "+ lang.cancel +"</button>"
-    html += " <button id=\"line-"+ lineObj.LineNumber +"-early-dtmf\" onclick=\"ShowDtmfMenu('"+ lineObj.LineNumber +"')\" style=\"display:none\"><i class=\"fa fa-keyboard-o\"></i> "+ lang.send_dtmf +"</button>"
-    html += "</div>"; //.progressCall
-    html += "</div>"; //.CallUi
+    // html += "<div class=\"CallPictureUnderlay\" style=\"background-image: url('"+ avatar +"')\"></div>";
+    // html += "<div class=\"CallColorUnderlay\"></div>";
+    // html += "<div class=\"CallUi\">";
+    // html += "<div class=callingDisplayName>"+ lineObj.DisplayName +"</div>";
+    // html += "<div class=callingDisplayNumber>"+ lineObj.DisplayNumber +"</div>";
+    // html += "<div id=\"line-"+ lineObj.LineNumber +"-out-avatar\" class=\"inCallAvatar\" style=\"background-image: url('"+ avatar +"')\"></div>";
+    // html += "<div class=progressCall>"
+    // html += "<button onclick=\"cancelSession('"+ lineObj.LineNumber +"')\" class=rejectButton><i class=\"fa fa-phone\" style=\"transform: rotate(135deg);\"></i> "+ lang.cancel +"</button>"
+    // html += " <button id=\"line-"+ lineObj.LineNumber +"-early-dtmf\" onclick=\"ShowDtmfMenu('"+ lineObj.LineNumber +"')\" style=\"display:none\"><i class=\"fa fa-keyboard-o\"></i> "+ lang.send_dtmf +"</button>"
+    // html += "</div>"; //.progressCall
+    // html += "</div>"; //.CallUi
+
+    html += `
+    <div class="container">
+        <!-- PNG Logo -->
+        <img src="./media/logo.png" alt="Logo" class="logo">
+    </div>
+    `;
+
     html += "</div>"; // -progress
 
     // Active Call UI
@@ -10542,6 +10725,12 @@ function FindBuddyByExtNo(ExtNo){
     }
     return null;
 }
+function FindBuddyByExtensionNumber(ExtNo){
+    for(var b = 0; b < Buddies.length; b++){
+        if(Buddies[b].ExtensionNumber == ExtNo) return Buddies[b];
+    }
+    return null;
+}
 function FindBuddyByNumber(number){
     // Number could be: +XXXXXXXXXX
     // Any special characters must be removed prior to adding
@@ -10902,6 +11091,7 @@ function RedrawStage(lineNum, videoChanged){
         $(video).hide();
     });
     previewContainer.css("width",  "");
+    previewContainer.css("display", "none");
 
     // Count and Tag Videos
     var videoCount = 0;
