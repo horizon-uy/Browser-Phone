@@ -541,76 +541,7 @@ function dumpLocalStorage() {
 };
 
 $(document).ready(function () {
-
-    // Function to preload form fields with values from localStorage
-    function preloadForm() {
-        // WebSocket Port
-        if (localDB.getItem('websocketPort')) {
-            $('#websocketPort').val(localDB.getItem('websocketPort'));
-        } else {
-            $('#websocketPort').val('8089'); // Default value
-        }
-
-        // Voicemail DID
-        if (localDB.getItem('VoicemailDid')) {
-            $('#VoicemailDid').val(localDB.getItem('VoicemailDid'));
-        } else {
-            $('#VoicemailDid').val('7000'); // Default value
-        }
-
-        // WSS Server
-        if (localDB.getItem('wssServer')) {
-            $('#wssServer').val(localDB.getItem('wssServer'));
-        } else {
-            $('#wssServer').val('pbx-prod.horizonseguridad.com'); // Default value
-        }
-
-        // SIP Domain
-        if (localDB.getItem('SipDomain')) {
-            $('#SipDomain').val(localDB.getItem('SipDomain'));
-        } else {
-            $('#SipDomain').val('pbx-prod.horizonseguridad.com'); // Default value
-        }
-
-        // Server Path
-        if (localDB.getItem('ServerPath')) {
-            $('#ServerPath').val(localDB.getItem('ServerPath'));
-        } else {
-            $('#ServerPath').val('/ws'); // Default value
-        }
-
-        // Profile Name
-        if (localDB.getItem('profileName')) {
-            $('#profileName').val(localDB.getItem('profileName'));
-        } else {
-            $('#profileName').val('Totem Horizon'); // Default value
-        }
-
-        // SIP Username
-        if (localDB.getItem('SipUsername')) {
-            $('#SipUsername').val(localDB.getItem('SipUsername'));
-        } else {
-            $('#SipUsername').val('7000'); // Default value
-        }
-
-        // SIP Password
-        if (localDB.getItem('SipPassword')) {
-            $('#SipPassword').val(localDB.getItem('SipPassword'));
-        } else {
-            $('#SipPassword').val('checo.123'); // Default value
-        }
-
-        // Internal number to call
-        if (localDB.getItem('SelectedNumber')) {
-            $('#SelectedNumber').val(localDB.getItem('SelectedNumber'));
-        } else {
-            $('#SelectedNumber').val('4444'); // Default value
-        }
-    }
-
-    // Call the preload function
-    preloadForm();
-
+    // Default values
     let jsonData = {
         "AutoGainControl": "1",
         "VideoSrcId": "default",
@@ -650,7 +581,50 @@ $(document).ready(function () {
         "profileUserID": "172789287747223B5",
         "SipPassword": "checo.123",
         "RequiresConfig": "yes"
-      }
+    }
+    
+    // Function to preload form fields with values from localDB, jsonData, or default values
+    function preloadForm(jsonData) {
+        function getValue(key, defaultValue) {
+            if (localDB.getItem(key)) {
+                return localDB.getItem(key);
+            } else if (typeof jsonData[key] !== 'undefined' && jsonData[key] !== null) {
+                return jsonData[key];
+            } else {
+                return defaultValue;
+            }
+        }
+
+        // WebSocket Port
+        $('#websocketPort').val(getValue('websocketPort', '8089'));
+
+        // Voicemail DID
+        $('#VoicemailDid').val(getValue('VoicemailDid', '7000'));
+
+        // WSS Server
+        $('#wssServer').val(getValue('wssServer', 'pbx-prod.horizonseguridad.com'));
+
+        // SIP Domain
+        $('#SipDomain').val(getValue('SipDomain', 'pbx-prod.horizonseguridad.com'));
+
+        // Server Path
+        $('#ServerPath').val(getValue('ServerPath', '/ws'));
+
+        // Profile Name
+        $('#profileName').val(getValue('profileName', 'Totem Horizon'));
+
+        // SIP Username
+        $('#SipUsername').val(getValue('SipUsername', '7000'));
+
+        // SIP Password
+        $('#SipPassword').val(getValue('SipPassword', 'checo.123'));
+
+        // Internal number to call
+        $('#SelectedNumber').val(getValue('SelectedNumber', '4444'));
+    }
+
+    // Call the preload function with jsonData
+    preloadForm(jsonData);
 
     // New populateDB function
     function populateDB(jsonData) {
