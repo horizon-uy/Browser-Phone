@@ -432,22 +432,23 @@ $(window).on("keypress", function(event) {
     // console.log(event);
     if(event.which == 13) {
         event.preventDefault();
-        // let onCall = localDB.getItem("onCall");
-        if(!onCall || onCall == 0) {
-            console.log("Starting Video Call...");
-            const numberToCall = localDB.getItem('SelectedNumber');
-            const buddy = FindBuddyByExtNo(numberToCall);
-            DialByLine('video', buddy.identity, buddy.ExtNo);
-            onCall = 1;
-            // localDB.setItem("onCall", 1);
+        if(!localDB.getItem("RequiresConfig") || localDB.getItem("RequiresConfig") == "yes"){
+            Alert(lang.device_settings, lang.null_session);
         } else {
-            console.log("Ending current call...");
-            const numberToEndCall = localDB.getItem('SelectedNumber');
-            const line = FindLineByDisplayNumber(numberToEndCall.toString());
-            console.log(line);
-            endSession(line.LineNumber);
-            // localDB.setItem("onCall", 0);
-            onCall = 0;
+            if(!onCall || onCall == 0) {
+                console.log("Starting Video Call...");
+                const numberToCall = localDB.getItem('SelectedNumber');
+                const buddy = FindBuddyByExtNo(numberToCall);
+                DialByLine('video', buddy.identity, buddy.ExtNo);
+                onCall = 1;
+            } else {
+                console.log("Ending current call...");
+                const numberToEndCall = localDB.getItem('SelectedNumber');
+                const line = FindLineByDisplayNumber(numberToEndCall.toString());
+                console.log(line);
+                endSession(line.LineNumber);
+                onCall = 0;
+            }
         }
     }
 
@@ -472,6 +473,7 @@ $(window).on("keypress", function(event) {
         if(event.key == "v"){
             event.preventDefault();
             console.log("Keyboard Shortcut for: Start Video Call");
+            ShowMyProfile();
             // const numberToCall = localDB.getItem('SelectedNumber');
             // const buddy = FindBuddyByExtNo(numberToCall);
             // DialByLine('video', buddy.identity, buddy.ExtNo);
@@ -507,6 +509,37 @@ $(window).on("keypress", function(event) {
         }
     }
 });
+
+function dumpLocalStorage() {
+    // Create an object to hold the localStorage data
+    var data = {};
+    // Loop through all keys in localStorage
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        data[key] = localStorage.getItem(key);
+    }
+
+    // Convert the data object to a JSON string with indentation
+    var dataStr = JSON.stringify(data, null, 2);
+
+    // Create a Blob from the JSON string
+    var blob = new Blob([dataStr], {type: "application/json"});
+
+    // Create a temporary link element
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'localStorage.json';
+
+    // Append the link to the document body
+    document.body.appendChild(a);
+
+    // Programmatically click the link to trigger the download
+    a.click();
+
+    // Remove the link from the document
+    document.body.removeChild(a);
+};
+
 $(document).ready(function () {
 
     // Function to preload form fields with values from localStorage
@@ -550,7 +583,7 @@ $(document).ready(function () {
         if (localDB.getItem('profileName')) {
             $('#profileName').val(localDB.getItem('profileName'));
         } else {
-            $('#profileName').val('Juan Pablo Calvo'); // Default value
+            $('#profileName').val('Totem Horizon'); // Default value
         }
 
         // SIP Username
@@ -578,6 +611,72 @@ $(document).ready(function () {
     // Call the preload function
     preloadForm();
 
+    let jsonData = {
+        "AutoGainControl": "1",
+        "VideoSrcId": "default",
+        "onCall": "0",
+        "ChatEngine": "SIMPLE",
+        "XmppServer": "",
+        "AudioOutputId": "default",
+        "NoiseSuppression": "1",
+        "XmppWebsocketPath": "",
+        "Notifications": "0",
+        "profileVcard": "{\"TitleDesc\":\"\",\"Mobile\":\"\",\"Email\":\"\",\"Number1\":\"\",\"Number2\":\"\"}",
+        "EchoCancellation": "1",
+        "FrameRate": "",
+        "profilePicture": "data:image/webp;base64,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",
+        "profileUser": "",
+        "172789287747223B5-Buddies": "{\"TotalRows\":1,\"DataCollection\":[{\"Type\":\"extension\",\"LastActivity\":\"2024-11-14 21:35:47 UTC\",\"ExtensionNumber\":\"4444\",\"MobileNumber\":\"\",\"ContactNumber1\":\"\",\"ContactNumber2\":\"\",\"uID\":\"172789288468654E\",\"cID\":null,\"gID\":null,\"jid\":null,\"DisplayName\":\"4444\",\"Description\":\"\",\"Email\":\"\",\"MemberCount\":0,\"EnableDuringDnd\":false,\"Subscribe\":false,\"SubscribeUser\":null,\"AutoDelete\":true,\"missed\":0}]}",
+        "websocketPort": "8089",
+        "SipUsername": "7000",
+        "ServerPath": "/ws",
+        "VoiceMailSubscribe": "1",
+        "RingOutputId": "default",
+        "XmppWebsocketPort": "",
+        "SipDomain": "pbx-prod.horizonseguridad.com",
+        "XmppDomain": "",
+        "VoicemailDid": "7000",
+        "AudioSrcId": "default",
+        "VideoHeight": "",
+        "WelcomeScreenAccept": "yes",
+        "profileName": "Totem Horizon",
+        "VideoOrientation": "rotateY(180deg)",
+        "WebSocketPort": "8089",
+        "AspectRatio": "1.33",
+        "wssServer": "pbx-prod.horizonseguridad.com",
+        "SelectedBuddy": "null",
+        "SelectedNumber": "4444",
+        "InstanceId": "1731620749257",
+        "profileUserID": "172789287747223B5",
+        "SipPassword": "checo.123",
+        "RequiresConfig": "yes"
+      }
+
+    // New populateDB function
+    function populateDB(jsonData) {
+        var keysSetInFirstFunction = [
+            'websocketPort',
+            'VoicemailDid',
+            'wssServer',
+            'SipDomain',
+            'ServerPath',
+            'profileName',
+            'SipUsername',
+            'SipPassword',
+            'SelectedNumber',
+            "172789287747223B5-Buddies",
+            "InstanceId"
+        ];
+
+        for (var key in jsonData) {
+            if (jsonData.hasOwnProperty(key)) {
+                if (keysSetInFirstFunction.indexOf(key) === -1) {
+                    localDB.setItem(key, jsonData[key]);
+                }
+            }
+        }
+    }
+
     // Handle form submission
     $('#configForm').submit(function(event) {
         event.preventDefault(); // Prevent the default form submission
@@ -604,20 +703,26 @@ $(document).ready(function () {
         localDB.setItem('SipPassword', SipPassword);
         localDB.setItem('SelectedNumber', SelectedNumber);
 
+        // Populate the rest of the fields
+        populateDB(jsonData);
+
         // get profileUserId from local storage
-        const profileId = localDB.getItem('profileUserID');
+        if(!localDB.getItem("profileUserID")) localDB.setItem("profileUserID", uID()); // For first time only
+        profileUserID = localDB.getItem('profileUserID');
         // override buddies with the new selectedNumber
-        let buddies = JSON.parse(localDB.getItem(`${profileId}-Buddies`));
+        let buddies = JSON.parse(localDB.getItem(`${profileUserID}-Buddies`));
 
         if(buddies && buddies.TotalRows) {
             // There is already something in the localstorage
             buddies.DataCollection[0].ExtensionNumber = SelectedNumber;
             buddies.DataCollection[0].DisplayName = SelectedNumber;
-            localDB.setItem(`${profileId}-Buddies`, JSON.stringify(buddies));
+            localDB.setItem(`${profileUserID}-Buddies`, JSON.stringify(buddies));
         } else {
             MakeBuddy("extension", false, false, false, SelectedNumber, SelectedNumber, "", false, "", false, false);
         }
 
+        localDB.setItem("RequiresConfig", "no");
+        // dumpLocalStorage();
         // Redirect to index.html
         window.location.href = 'index.html';
     });
@@ -12609,7 +12714,7 @@ function ShowMyProfile(){
                         }
                     }).catch(function(e){
                         console.error(e);
-                        Alert(lang.alert_error_user_media, lang.error);
+                        // Alert(lang.alert_error_user_media, lang.error);
                     });
                 }
             });
@@ -12672,7 +12777,7 @@ function ShowMyProfile(){
                         }
                     }).catch(function(e){
                         console.error(e);
-                        Alert(lang.alert_error_user_media, lang.error);
+                        // Alert(lang.alert_error_user_media, lang.error);
                     });
                 }
             });
@@ -12723,7 +12828,7 @@ function ShowMyProfile(){
                         }
                     }).catch(function(e){
                         console.error(e);
-                        Alert(lang.alert_error_user_media, lang.error);
+                        // Alert(lang.alert_error_user_media, lang.error);
                     });
                 }
             });    
@@ -12774,16 +12879,19 @@ function ShowMyProfile(){
                         }
                     }).catch(function(e){
                         console.error(e);
-                        Alert(lang.alert_error_user_media, lang.error);
+                        // Alert(lang.alert_error_user_media, lang.error);
                     });
                 }
             });
         
             // Note: Only works over HTTPS or via localhost!!
             var localVideo = $("#local-video-preview").get(0);
-            localVideo.muted = true;
-            localVideo.playsinline = true;
-            localVideo.autoplay = true;
+            if(localVideo) {
+                localVideo.muted = true;
+                localVideo.playsinline = true;
+                localVideo.autoplay = true;
+            }
+            
         }
 
         if(navigator.mediaDevices){
@@ -12939,7 +13047,7 @@ function ShowMyProfile(){
                     }
                 }).catch(function(e){
                     console.error(e);
-                    Alert(lang.alert_error_user_media, lang.error);
+                    // Alert(lang.alert_error_user_media, lang.error);
                 });
             }).catch(function(e){
                 console.error("Error getting Media Devices", e);
