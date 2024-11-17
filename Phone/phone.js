@@ -142,7 +142,7 @@ let NoiseSuppression = (getDbItem("NoiseSuppression", "1") == "1");      // Atte
 let MirrorVideo = getDbItem("VideoOrientation", "rotateY(180deg)");      // Displays the self-preview in normal or mirror view, to better present the preview. 
 let maxFrameRate = getDbItem("FrameRate", "");                           // Suggests a frame rate to your webcam if possible.
 let videoHeight = getDbItem("VideoHeight", "");                          // Suggests a video height (and therefor picture quality) to your webcam.
-let MaxVideoBandwidth = parseInt(getDbItem("MaxVideoBandwidth", "2048")); // Specifies the maximum bandwidth (in Kb/s) for your outgoing video stream. e.g: 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | -1 to disable
+let MaxVideoBandwidth = parseInt(getDbItem("MaxVideoBandwidth", "-1")); // Specifies the maximum bandwidth (in Kb/s) for your outgoing video stream. e.g: 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | -1 to disable
 let videoAspectRatio = getDbItem("AspectRatio", "1");                  // ("1.33") Suggests an aspect ratio (1:1 = 1 | 4:3 = 0.75 | 16:9 = 0.5625) to your webcam.
 let NotificationsActive = (getDbItem("Notifications", "0") == "1");
 
@@ -1850,7 +1850,7 @@ function InitUi(){
     rightSection.attr("style", "margin-left: 320px; height: 100%");
 
     const $videoPlayer = $('<video>', {
-        src: './media/output.mp4',
+        src: './media/output_rpi5_muted.mp4',
         css: {
             position: 'fixed',
             top: '0',
