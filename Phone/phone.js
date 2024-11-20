@@ -141,9 +141,9 @@ let EchoCancellation = (getDbItem("EchoCancellation", "1") == "1");      // Atte
 let NoiseSuppression = (getDbItem("NoiseSuppression", "1") == "1");      // Attempts to clear the call quality of noise.
 let MirrorVideo = getDbItem("VideoOrientation", "rotateY(180deg)");      // Displays the self-preview in normal or mirror view, to better present the preview. 
 let maxFrameRate = getDbItem("FrameRate", "");                           // Suggests a frame rate to your webcam if possible.
-let videoHeight = getDbItem("VideoHeight", "");                          // Suggests a video height (and therefor picture quality) to your webcam.
+let videoHeight = getDbItem("VideoHeight", "1920");                          // Suggests a video height (and therefor picture quality) to your webcam.
 let MaxVideoBandwidth = parseInt(getDbItem("MaxVideoBandwidth", "-1")); // Specifies the maximum bandwidth (in Kb/s) for your outgoing video stream. e.g: 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | -1 to disable
-let videoAspectRatio = getDbItem("AspectRatio", "1");                  // ("1.33") Suggests an aspect ratio (1:1 = 1 | 4:3 = 0.75 | 16:9 = 0.5625) to your webcam.
+let videoAspectRatio = getDbItem("AspectRatio", "0.5625");                  // ("1.33") Suggests an aspect ratio (1:1 = 1 | 4:3 = 0.75 | 16:9 = 0.5625) to your webcam.
 let NotificationsActive = (getDbItem("Notifications", "0") == "1");
 
 let StreamBuffer = parseInt(getDbItem("StreamBuffer", 50));                 // The amount of rows to buffer in the Buddy Stream
@@ -435,19 +435,23 @@ $(window).on("keypress", function(event) {
         if(!localDB.getItem("RequiresConfig") || localDB.getItem("RequiresConfig") == "yes"){
             Alert(lang.device_settings, lang.null_session);
         } else {
-            if(!onCall || onCall == 0) {
-                console.log("Starting Video Call...");
-                const numberToCall = localDB.getItem('SelectedNumber');
-                const buddy = FindBuddyByExtNo(numberToCall);
-                DialByLine('video', buddy.identity, buddy.ExtNo);
-                onCall = 1;
+            if(userAgent.isRegistered()) {
+                if(!onCall || onCall == 0) {
+                    console.log("Starting Video Call...");
+                    const numberToCall = localDB.getItem('SelectedNumber');
+                    const buddy = FindBuddyByExtNo(numberToCall);
+                    DialByLine('video', buddy.identity, buddy.ExtNo);
+                    onCall = 1;
+                } else {
+                    console.log("Ending current call...");
+                    const numberToEndCall = localDB.getItem('SelectedNumber');
+                    const line = FindLineByDisplayNumber(numberToEndCall.toString());
+                    console.log(line);
+                    endSession(line.LineNumber);
+                    onCall = 0;
+                }
             } else {
-                console.log("Ending current call...");
-                const numberToEndCall = localDB.getItem('SelectedNumber');
-                const line = FindLineByDisplayNumber(numberToEndCall.toString());
-                console.log(line);
-                endSession(line.LineNumber);
-                onCall = 0;
+                alert("Unable to connect to websocket");
             }
         }
     }
@@ -473,7 +477,7 @@ $(window).on("keypress", function(event) {
         if(event.key == "v"){
             event.preventDefault();
             console.log("Keyboard Shortcut for: Start Video Call");
-            ShowMyProfile();
+            // ShowMyProfile();
             // const numberToCall = localDB.getItem('SelectedNumber');
             // const buddy = FindBuddyByExtNo(numberToCall);
             // DialByLine('video', buddy.identity, buddy.ExtNo);
@@ -2001,11 +2005,11 @@ function InitUi(){
     PopulateBuddyList();
 
     // Select Last user
-    if(localDB.getItem("SelectedBuddy") != null){
-        console.log("Selecting previously selected buddy...", localDB.getItem("SelectedBuddy"));
-        SelectBuddy(localDB.getItem("SelectedBuddy"));
-        UpdateUI();
-    }
+    // if(localDB.getItem("SelectedBuddy") != null){
+    //     console.log("Selecting previously selected buddy...", localDB.getItem("SelectedBuddy"));
+    //     SelectBuddy(localDB.getItem("SelectedBuddy"));
+    //     UpdateUI();
+    // }
 
     PreloadAudioFiles();
 
@@ -3709,6 +3713,7 @@ function onTrackAddedEvent(lineObj, includeVideo){
 
 // General end of Session
 function teardownSession(lineObj) {
+    onCall = 0;
     if(lineObj == null || lineObj.SipSession == null) return;
 
     var session = lineObj.SipSession;
@@ -9529,11 +9534,11 @@ function RemoveLine(lineObj){
     if(earlyReject != true){
         // Rather than showing nothing, go to the last Buddy Selected
         // Select Last user
-        if(localDB.getItem("SelectedBuddy") != null){
-            console.log("Selecting previously selected buddy...", localDB.getItem("SelectedBuddy"));
-            SelectBuddy(localDB.getItem("SelectedBuddy"));
-            UpdateUI();
-        }
+        // if(localDB.getItem("SelectedBuddy") != null){
+        //     console.log("Selecting previously selected buddy...", localDB.getItem("SelectedBuddy"));
+        //     SelectBuddy(localDB.getItem("SelectedBuddy"));
+        //     UpdateUI();
+        // }
     } 
 }
 function CloseLine(lineNum){
@@ -11230,13 +11235,13 @@ function RedrawStage(lineNum, videoChanged){
             pinnedVideoID = lineObj.pinnedVideo;
         }
         // Count All the videos
-        if(videoTrack.readyState == "live" && srcVideoWidth > 10 && srcVideoHeight >= 10) {
+        //if(videoTrack.readyState == "live" && srcVideoWidth > 10 && srcVideoHeight >= 10) {
             videoCount ++;
             console.log("Display Video - ", videoTrack.readyState, "MID:", thisRemoteVideoStream.mid, "channel:", thisRemoteVideoStream.channel, "src width:", srcVideoWidth, "src height", srcVideoHeight);
-        }
-        else{
-            console.log("Hide Video - ", videoTrack.readyState ,"MID:", thisRemoteVideoStream.mid);
-        }
+        // }
+        // else{
+        //     console.log("Hide Video - ", videoTrack.readyState ,"MID:", thisRemoteVideoStream.mid);
+        // }
 
 
     });
@@ -11260,6 +11265,7 @@ function RedrawStage(lineNum, videoChanged){
     if(videoAspectRatio == "" || videoAspectRatio == "1.33") videoRatio = 0.750;  
     if(videoAspectRatio == "1.77") videoRatio = 0.5625;
     if(videoAspectRatio == "1") videoRatio = 1;
+    if(videoAspectRatio == "1.7778") videoRatio = 1.7778;
     var stageWidth = videoContainer.outerWidth() - (Margin * 2);
     var stageHeight = videoContainer.outerHeight() - (Margin * 2);
     var previewWidth = previewContainer.outerWidth();
@@ -12192,6 +12198,7 @@ function ShowMyProfile(){
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r10 type=radio value=\"1\"><label class=radio_pill for=r10><i class=\"fa fa-square-o\" style=\"transform: scaleX(1); margin-left: 7px; margin-right: 7px\"></i> 1:1</label>";
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r11 type=radio value=\"1.33\"><label class=radio_pill for=r11><i class=\"fa fa-square-o\" style=\"transform: scaleX(1.33); margin-left: 5px; margin-right: 5px;\"></i> 4:3</label>";
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r12 type=radio value=\"1.77\"><label class=radio_pill for=r12><i class=\"fa fa-square-o\" style=\"transform: scaleX(1.77); margin-right: 3px;\"></i> 16:9</label>";
+        AudioVideoHtml += "<input name=Settings_AspectRatio id=r14 type=radio value=\"1.7778\"><label class=radio_pill for=r14><i class=\"fa fa-square-o\" style=\"transform: scaleX(1.7778); margin-right: 3px;\"></i> 9:16</label>";
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r13 type=radio value=\"\"><label class=radio_pill for=r13><i class=\"fa fa-trash\"></i></label>";
         AudioVideoHtml += "</div>";
 
