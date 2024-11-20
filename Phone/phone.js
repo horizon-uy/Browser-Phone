@@ -438,17 +438,17 @@ $(window).on("keypress", function(event) {
             if(userAgent.isRegistered()) {
                 if(!onCall || onCall == 0) {
                     console.log("Starting Video Call...");
+                    onCall = 1;
                     const numberToCall = localDB.getItem('SelectedNumber');
                     const buddy = FindBuddyByExtNo(numberToCall);
                     DialByLine('video', buddy.identity, buddy.ExtNo);
-                    onCall = 1;
                 } else {
                     console.log("Ending current call...");
+                    onCall = 0;
                     const numberToEndCall = localDB.getItem('SelectedNumber');
                     const line = FindLineByDisplayNumber(numberToEndCall.toString());
                     console.log(line);
                     endSession(line.LineNumber);
-                    onCall = 0;
                 }
             } else {
                 alert("Unable to connect to websocket");
