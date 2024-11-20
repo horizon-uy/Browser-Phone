@@ -149,7 +149,7 @@ let NotificationsActive = (getDbItem("Notifications", "0") == "1");
 let StreamBuffer = parseInt(getDbItem("StreamBuffer", 50));                 // The amount of rows to buffer in the Buddy Stream
 let MaxDataStoreDays = parseInt(getDbItem("MaxDataStoreDays", 0));          // Defines the maximum amount of days worth of data (calls, recordings, messages, etc) to store locally. 0=Stores all data always. >0 Trims n days back worth of data at various events where. 
 let PosterJpegQuality = parseFloat(getDbItem("PosterJpegQuality", 0.6));    // The image quality of the Video Poster images
-let VideoResampleSize = getDbItem("VideoResampleSize", "FHD");               // The resample size (height) to re-render video that gets presented (sent). (SD = ???x360 | HD = ???x720 | FHD = ???x1080)
+let VideoResampleSize = getDbItem("VideoResampleSize", "HD");               // The resample size (height) to re-render video that gets presented (sent). (SD = ???x360 | HD = ???x720 | FHD = ???x1080)
 let RecordingVideoSize = getDbItem("RecordingVideoSize", "HD");             // The size/quality of the video track in the recordings (SD = 640x360 | HD = 1280x720 | FHD = 1920x1080)
 let RecordingVideoFps = parseInt(getDbItem("RecordingVideoFps", 12));       // The Frame Per Second of the Video Track recording
 let RecordingLayout = getDbItem("RecordingLayout", "them-pnp");             // The Layout of the Recording Video Track (side-by-side | them-pnp | us-only | them-only)
@@ -11235,13 +11235,13 @@ function RedrawStage(lineNum, videoChanged){
             pinnedVideoID = lineObj.pinnedVideo;
         }
         // Count All the videos
-        //if(videoTrack.readyState == "live" && srcVideoWidth > 10 && srcVideoHeight >= 10) {
+        if(videoTrack.readyState == "live" && srcVideoWidth > 10 && srcVideoHeight >= 10) {
             videoCount ++;
             console.log("Display Video - ", videoTrack.readyState, "MID:", thisRemoteVideoStream.mid, "channel:", thisRemoteVideoStream.channel, "src width:", srcVideoWidth, "src height", srcVideoHeight);
-        // }
-        // else{
-        //     console.log("Hide Video - ", videoTrack.readyState ,"MID:", thisRemoteVideoStream.mid);
-        // }
+        }
+        else{
+            console.log("Hide Video - ", videoTrack.readyState ,"MID:", thisRemoteVideoStream.mid);
+        }
 
 
     });
@@ -11266,6 +11266,7 @@ function RedrawStage(lineNum, videoChanged){
     if(videoAspectRatio == "1.77") videoRatio = 0.5625;
     if(videoAspectRatio == "1") videoRatio = 1;
     if(videoAspectRatio == "1.7778") videoRatio = 1.7778;
+    if(videoAspectRatio == "0.5625") videoRatio = 0.5625;
     var stageWidth = videoContainer.outerWidth() - (Margin * 2);
     var stageHeight = videoContainer.outerHeight() - (Margin * 2);
     var previewWidth = previewContainer.outerWidth();
@@ -12198,7 +12199,7 @@ function ShowMyProfile(){
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r10 type=radio value=\"1\"><label class=radio_pill for=r10><i class=\"fa fa-square-o\" style=\"transform: scaleX(1); margin-left: 7px; margin-right: 7px\"></i> 1:1</label>";
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r11 type=radio value=\"1.33\"><label class=radio_pill for=r11><i class=\"fa fa-square-o\" style=\"transform: scaleX(1.33); margin-left: 5px; margin-right: 5px;\"></i> 4:3</label>";
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r12 type=radio value=\"1.77\"><label class=radio_pill for=r12><i class=\"fa fa-square-o\" style=\"transform: scaleX(1.77); margin-right: 3px;\"></i> 16:9</label>";
-        AudioVideoHtml += "<input name=Settings_AspectRatio id=r14 type=radio value=\"1.7778\"><label class=radio_pill for=r14><i class=\"fa fa-square-o\" style=\"transform: scaleX(1.7778); margin-right: 3px;\"></i> 9:16</label>";
+        AudioVideoHtml += "<input name=Settings_AspectRatio id=r14 type=radio value=\"0.5625\"><label class=radio_pill for=r14><i class=\"fa fa-square-o\" style=\"transform: scaleX(0.5625); margin-right: 3px;\"></i> 9:16</label>";
         AudioVideoHtml += "<input name=Settings_AspectRatio id=r13 type=radio value=\"\"><label class=radio_pill for=r13><i class=\"fa fa-trash\"></i></label>";
         AudioVideoHtml += "</div>";
 
