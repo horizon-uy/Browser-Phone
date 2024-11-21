@@ -11293,6 +11293,9 @@ function RedrawStage(lineNum, videoChanged){
         var videoWidth = maxWidth;
         var videoHeight = maxWidth * videoRatio;
 
+        videoWidth = 1080;
+        videoHeight = 1920;
+        
         // Set & Show
         if(isVideoPinned){
             // One of the videos are pinned
