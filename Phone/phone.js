@@ -3216,6 +3216,7 @@ function onInviteCancel(lineObj, response){
 // Both Incoming an outgoing INVITE
 function onInviteAccepted(lineObj, includeVideo, response){
     // Call in progress
+    onCall = 1;
     var session = lineObj.SipSession;
 
     if(session.data.earlyMedia){
@@ -3414,7 +3415,8 @@ function onInviteProgress(lineObj, response){
 }
 function onInviteRejected(lineObj, response){
     console.log("INVITE Rejected:", response.message.reasonPhrase);
-
+    onCall = 0;
+    
     lineObj.SipSession.data.terminateby = "them";
     lineObj.SipSession.data.reasonCode = response.message.statusCode;
     lineObj.SipSession.data.reasonText = response.message.reasonPhrase;
@@ -3435,7 +3437,7 @@ function onSessionReceivedBye(lineObj, response){
     lineObj.SipSession.data.terminateby = "them";
     lineObj.SipSession.data.reasonCode = 16;
     lineObj.SipSession.data.reasonText = "Normal Call clearing";
-
+    onCall = 0;
     response.accept(); // Send OK
 
     teardownSession(lineObj);
