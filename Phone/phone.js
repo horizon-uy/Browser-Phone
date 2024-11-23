@@ -15,7 +15,7 @@
 
 // Global Settings
 // ===============
-const appversion = "0.3.27";
+const appversion = "0.3.29";
 const sipjsversion = "0.20.0";
 const navUserAgent = window.navigator.userAgent;  // TODO: change to Navigator.userAgentData
 const instanceID = String(Date.now());
@@ -253,6 +253,7 @@ let CallRecordingsIndexDb = null;
 let CallQosDataIndexDb = null;
 
 let onCall = 0;
+let blockActions = false;
 
 // Utilities
 // =========
@@ -435,20 +436,28 @@ $(window).on("keypress", function(event) {
         if(!localDB.getItem("RequiresConfig") || localDB.getItem("RequiresConfig") == "yes"){
             Alert(lang.device_settings, lang.null_session);
         } else {
+            // Check if websocket is online
             if(userAgent.isRegistered()) {
-                if(!onCall || onCall == 0) {
-                    console.log("Starting Video Call...");
-                    onCall = 1;
-                    const numberToCall = localDB.getItem('SelectedNumber');
-                    const buddy = FindBuddyByExtNo(numberToCall);
-                    DialByLine('video', buddy.identity, buddy.ExtNo);
+                if(!blockActions) {
+                    // Mutex to avoid having weird behaviours
+                    blockActions = true;
+                    if(!onCall || onCall == 0) {
+                        console.log("Starting Video Call...");
+                        onCall = 1;
+                        const numberToCall = localDB.getItem('SelectedNumber');
+                        const buddy = FindBuddyByExtNo(numberToCall);
+                        DialByLine('video', buddy.identity, buddy.ExtNo);
+                    } else {
+                        console.log("Ending current call...");
+                        const numberToEndCall = localDB.getItem('SelectedNumber');
+                        const line = FindLineByDisplayNumber(numberToEndCall.toString());
+                        console.log(line);
+                        endSession(line.LineNumber);
+                        onCall = 0;
+                    }
+                    blockActions = false;
                 } else {
-                    console.log("Ending current call...");
-                    onCall = 0;
-                    const numberToEndCall = localDB.getItem('SelectedNumber');
-                    const line = FindLineByDisplayNumber(numberToEndCall.toString());
-                    console.log(line);
-                    endSession(line.LineNumber);
+                    console.log("Blocked action due to wait on previous one");
                 }
             } else {
                 alert("Unable to connect to websocket");
@@ -8073,16 +8082,39 @@ function endSession(lineNum) {
     var lineObj = FindLineByNumber(lineNum);
     if(lineObj == null || lineObj.SipSession == null) return;
 
-    console.log("Ending call with: "+ lineNum);
-    lineObj.SipSession.data.terminateby = "us";
-    lineObj.SipSession.data.reasonCode = 16;
-    lineObj.SipSession.data.reasonText = "Normal Call clearing";
+    // console.log("Ending call with: "+ lineNum);
+    // lineObj.SipSession.data.terminateby = "us";
+    // lineObj.SipSession.data.reasonCode = 16;
+    // lineObj.SipSession.data.reasonText = "Normal Call clearing";
+    
+    if(lineObj.SipSession.state == SIP.SessionState.Initial || lineObj.SipSession.state == SIP.SessionState.Establishing){
+        console.log("Cancelling session : "+ lineNum);
+        lineObj.SipSession.data.terminateby = "us";
+        lineObj.SipSession.data.reasonCode = 0;
+        lineObj.SipSession.data.reasonText = "Call Cancelled";
+        lineObj.SipSession.cancel();
+        $("#line-" + lineNum + "-msg").html(lang.call_cancelled);
+    }
+    else {
+        console.log("Ending call with: "+ lineNum);
+        lineObj.SipSession.data.terminateby = "us";
+        lineObj.SipSession.data.reasonCode = 16;
+        lineObj.SipSession.data.reasonText = "Normal Call clearing";
+        lineObj.SipSession.bye().catch(function(e){
+            console.warn("Failed to bye the session!", e);
+        });
+        $("#line-" + lineNum + "-msg").html(lang.call_ended);
+    }
 
-    lineObj.SipSession.bye().catch(function(e){
-        console.warn("Failed to bye the session!", e);
-    });
+    // console.log("Ending call with: "+ lineNum);
+    // lineObj.SipSession.data.terminateby = "us";
+    // lineObj.SipSession.data.reasonCode = 16;
+    // lineObj.SipSession.data.reasonText = "Normal Call clearing";
 
-    $("#line-" + lineNum + "-msg").html(lang.call_ended);
+    // lineObj.SipSession.bye().catch(function(e){
+    //     console.warn("Failed to bye the session!", e);
+    // });
+    // $("#line-" + lineNum + "-msg").html(lang.call_ended);
     $("#line-" + lineNum + "-ActiveCall").hide();
 
     teardownSession(lineObj);
