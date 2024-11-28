@@ -1868,7 +1868,7 @@ function InitUi(){
     // rightSection.attr("style", "height: 100%");
     rightSection.attr("style", "margin-left: 320px; height: 100%");
 
-    const operatorExtension = localDB.getItem('SipUsername');
+    const operatorExtension = localDB.getItem('SelectedNumber');
     const recordingBucketURL = localDB.getItem('RecordingBucketURL');
 
     const $videoPlayer = $('<video>', {
