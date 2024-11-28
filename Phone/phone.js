@@ -634,6 +634,10 @@ $(document).ready(function () {
 
         // Internal number to call
         $('#SelectedNumber').val(getValue('SelectedNumber', '4444'));
+
+        // URL of the S3 bucket to pull recordings
+        $('#RecordingBucketURL').val(getValue('RecordingBucketURL', 'https://horizon-uy-totem-recordings.s3.us-east-1.amazonaws.com'));
+
     }
 
     // Call the preload function with jsonData
@@ -678,6 +682,7 @@ $(document).ready(function () {
         var SipUsername = $('#SipUsername').val();
         var SipPassword = $('#SipPassword').val();
         var SelectedNumber = $('#SelectedNumber').val();
+        var RecordingBucketURL = $('#RecordingBucketURL').val();
 
         // Store values in localStorage
         localDB.setItem('websocketPort', websocketPort);
@@ -689,6 +694,7 @@ $(document).ready(function () {
         localDB.setItem('SipUsername', SipUsername);
         localDB.setItem('SipPassword', SipPassword);
         localDB.setItem('SelectedNumber', SelectedNumber);
+        localDB.setItem('RecordingBucketURL', RecordingBucketURL);
 
         // Populate the rest of the fields
         populateDB(jsonData);
@@ -1863,9 +1869,10 @@ function InitUi(){
     rightSection.attr("style", "margin-left: 320px; height: 100%");
 
     const operatorExtension = localDB.getItem('SipUsername');
+    const recordingBucketURL = localDB.getItem('RecordingBucketURL');
 
     const $videoPlayer = $('<video>', {
-        src: `https://horizon-uy-totem-recordings.s3.us-east-1.amazonaws.com/${operatorExtension}_sanitized.mp4`,
+        src: `${recordingBucketURL}/${operatorExtension}_sanitized.mp4`,
         css: {
             position: 'fixed',
             top: '0',
