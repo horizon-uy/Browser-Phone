@@ -1862,8 +1862,10 @@ function InitUi(){
     // rightSection.attr("style", "height: 100%");
     rightSection.attr("style", "margin-left: 320px; height: 100%");
 
+    const operatorExtension = localDB.getItem('SipUsername');
+
     const $videoPlayer = $('<video>', {
-        src: './media/output_rpi5_muted.mp4',
+        src: `https://horizon-uy-totem-recordings.s3.us-east-1.amazonaws.com/${operatorExtension}_sanitized.mp4`,
         css: {
             position: 'fixed',
             top: '0',
