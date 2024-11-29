@@ -726,6 +726,40 @@ $(document).ready(function () {
         window.location.href = 'index.html';
     });
 
+    function checkAndReload() {
+        console.log("se chequea si hay que hacer reload");
+      if (!onCall) {
+        // Reload the page without using the cache
+        // Append a unique query parameter to bypass cache
+        var currentUrl = window.location.href.split('?')[0];
+        window.location.href = currentUrl + '?_=' + new Date().getTime();
+      }
+      // If 'onCall' is true, do nothing
+    }
+
+    function scheduleReload() {
+        var now = new Date();
+        var nextHour = new Date();
+        // Set the nextHour to the next top of the hour
+        nextHour.setHours(now.getHours() + 1);
+        nextHour.setMinutes(0);
+        nextHour.setSeconds(0);
+        nextHour.setMilliseconds(0);
+        // Calculate the time difference between now and next hour in milliseconds
+        var timeUntilNextHour = nextHour - now;
+        // Set a timeout to trigger at the next hour
+        setTimeout(function() {
+            checkAndReload();
+            // After the first execution, set an interval to run every hour
+            setInterval(function() {
+                checkAndReload();
+            }, 60 * 60 * 1000); // Every hour in milliseconds (60 * 60 * 1000)
+        }, timeUntilNextHour);
+    }
+
+    // Initialize the schedule
+    scheduleReload();
+
     // We will use the IndexDB, so connect to it now, and perform any upgrade options
     PrepareIndexDB();
 
